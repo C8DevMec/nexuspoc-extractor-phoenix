@@ -7,7 +7,16 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-config :nexuspoc_extractor, :nexus_script_path, System.fetch_env!("NEXUS_SCRIPT_PATH")
+# Get the script path - provide a default for development
+nexus_script_path =
+  System.get_env("NEXUS_SCRIPT_PATH") ||
+    Path.join([
+      Application.app_dir(:nexuspoc_extractor),
+      "bin",
+      "pi_data_fetcher.ps1"
+    ])
+
+config :nexuspoc_extractor, :nexus_script_path, nexus_script_path
 
 # ## Using releases
 #
