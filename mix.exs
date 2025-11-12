@@ -11,11 +11,7 @@ defmodule NexuspocExtractor.MixProject do
       aliases: aliases(),
       deps: deps(),
       listeners: [Phoenix.CodeReloader],
-      releases: [
-        prod: [
-          validate_compile_env: false
-        ]
-      ]
+      releases: releases()
     ]
   end
 
@@ -68,5 +64,40 @@ defmodule NexuspocExtractor.MixProject do
       setup: ["deps.get"],
       precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
     ]
+  end
+
+  # Release configuration
+  defp releases do
+    [
+      nexuspoc_extractor: [
+        include_executables_for: [:windows],
+        applications: [runtime_tools: :permanent],
+        steps: [:assemble, &copy_bin_files/1]
+      ]
+    ]
+  end
+
+  defp copy_bin_files(release) do
+    File.mkdir_p!(Path.join(release.path, "bin"))
+
+    # Copy PowerShell script from controllers to release bin
+    source = "lib/nexuspoc_extractor_web/controllers/pi_data_fetcher.ps1"
+    dest = Path.join([release.path, "bin", "pi_data_fetcher.ps1"])
+
+    if File.exists?(source) do
+      File.cp!(source, dest)
+      IO.puts("Copied PowerShell script to #{dest}")
+    end
+
+    # Copy server.bat if it exists
+    server_bat_source = "rel/overlays/bin/server.bat"
+    server_bat_dest = Path.join([release.path, "bin", "server.bat"])
+
+    if File.exists?(server_bat_source) do
+      File.cp!(server_bat_source, server_bat_dest)
+      IO.puts("Copied server.bat to #{server_bat_dest}")
+    end
+
+    release
   end
 end
